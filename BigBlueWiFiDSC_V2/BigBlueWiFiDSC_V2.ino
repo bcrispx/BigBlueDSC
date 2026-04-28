@@ -21,50 +21,47 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Description:
- *   Digital setting circles microcontroller for Equatorial and
- *   Alt-Azimuth mounts, with WiFi connectivity.
+ *   Digital setting circles microcontroller for the Big Blue equatorial
+ *   telescope, with WiFi connectivity.
  *
- */       
+ */
 
-String firmwareVersion = "2.2";
+String firmwareVersion = "2.0";
 #include <WiFi.h>
 #include <WiFiClient.h>
 #include <WiFiAP.h>
 
 const char *ssid = "BigBlueWiFiDSC_V2";
 const char *password = "bigbluebigblue";
-const long resolution_az = -24679;
-const long resolution_alt = 20000;
-const int STATUS_LED = 2;
+const long resolution_ra  =  20000;
+const long resolution_dec = -24679;
+const int  STATUS_LED     =  2;
 
 WiFiServer server(80);
 WiFiClient client;
- 
-#define enc_az_A 27                        
-#define enc_az_B 26                        
-#define enc_al_A 25                        
-#define enc_al_B 33                        
 
-volatile int lastEncodedAl = 0, lastEncodedAz = 0;
-volatile long encoderValueAl = 0, encoderValueAz = 0;
+#define enc_ra_A  27
+#define enc_ra_B  26
+#define enc_dec_A 25
+#define enc_dec_B 33
+
+volatile int lastEncodedDec = 0, lastEncodedRa = 0;
+volatile long encoderValueDec = 0, encoderValueRa = 0;
 portMUX_TYPE encoderMux = portMUX_INITIALIZER_UNLOCKED;
 
 void setup()
 {
   delay(1000);
-  pinMode(enc_al_A, INPUT_PULLUP);
-  pinMode(enc_al_B, INPUT_PULLUP);
-  pinMode(enc_az_A, INPUT_PULLUP);
-  pinMode(enc_az_B, INPUT_PULLUP);
-  pinMode(STATUS_LED, OUTPUT);  
+  pinMode(enc_dec_A, INPUT_PULLUP);
+  pinMode(enc_dec_B, INPUT_PULLUP);
+  pinMode(enc_ra_A,  INPUT_PULLUP);
+  pinMode(enc_ra_B,  INPUT_PULLUP);
+  pinMode(STATUS_LED, OUTPUT);
 
-  attachInterrupt(digitalPinToInterrupt(enc_al_A), EncoderAl, CHANGE);
-  attachInterrupt(digitalPinToInterrupt(enc_al_B), EncoderAl, CHANGE);
-  attachInterrupt(digitalPinToInterrupt(enc_az_A), EncoderAz, CHANGE);
-  attachInterrupt(digitalPinToInterrupt(enc_az_B), EncoderAz, CHANGE);
-  
-  //Serial.begin(115200);
-  //Serial.println();
+  attachInterrupt(digitalPinToInterrupt(enc_dec_A), EncoderDec, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(enc_dec_B), EncoderDec, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(enc_ra_A),  EncoderRa,  CHANGE);
+  attachInterrupt(digitalPinToInterrupt(enc_ra_B),  EncoderRa,  CHANGE);
 
   IPAddress local_IP(192, 168, 4, 1);
   IPAddress gateway(192, 168, 4, 1);
@@ -72,7 +69,6 @@ void setup()
   WiFi.softAPConfig(local_IP, gateway, subnet);
   WiFi.softAP(ssid, password, 6);   // channel 6 for RF stability
   server.begin();
-  
 }
 
 void loop() {
@@ -88,14 +84,14 @@ void loop() {
         int c = client.read();
 
         if (c == 'Q') {                      // encoder query
-          long snapAz, snapAl;
+          long snapRa, snapDec;
           portENTER_CRITICAL(&encoderMux);
-          snapAz = encoderValueAz;
-          snapAl = encoderValueAl;
+          snapRa  = encoderValueRa;
+          snapDec = encoderValueDec;
           portEXIT_CRITICAL(&encoderMux);
-          printEncoderValue(snapAz);
+          printEncoderValue(snapRa);
           client.print("\t");
-          printEncoderValue(snapAl);
+          printEncoderValue(snapDec);
           client.print("\r");
 
         } else if (c == 'V') {               // firmware version
@@ -106,7 +102,6 @@ void loop() {
           client.print("\r");
 
         } else if (c == 'G') {               // HTTP GET — captive-portal probe
-          // drain remaining headers
           while (client.connected() && client.available()) client.read();
           client.print("HTTP/1.1 200 OK\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
           break;
@@ -122,68 +117,55 @@ void loop() {
   }
 }
 
-void EncoderAl() {
-  int encodedAl = (digitalRead(enc_al_A) << 1) | digitalRead(enc_al_B);
-  int sum  = (lastEncodedAl << 2) | encodedAl;
+void EncoderDec() {
+  int encodedDec = (digitalRead(enc_dec_A) << 1) | digitalRead(enc_dec_B);
+  int sum = (lastEncodedDec << 2) | encodedDec;
   portENTER_CRITICAL_ISR(&encoderMux);
-  if (sum == 0b1101 || sum == 0b0100 || sum == 0b0010 || sum == 0b1011) encoderValueAl++;
-  if (sum == 0b1110 || sum == 0b0111 || sum == 0b0001 || sum == 0b1000) encoderValueAl--;
+  if (sum == 0b1101 || sum == 0b0100 || sum == 0b0010 || sum == 0b1011) encoderValueDec++;
+  if (sum == 0b1110 || sum == 0b0111 || sum == 0b0001 || sum == 0b1000) encoderValueDec--;
   portEXIT_CRITICAL_ISR(&encoderMux);
-  lastEncodedAl = encodedAl;
+  lastEncodedDec = encodedDec;
 }
 
-void EncoderAz() {
-  int encodedAz = (digitalRead(enc_az_A) << 1) | digitalRead(enc_az_B);
-  int sum  = (lastEncodedAz << 2) | encodedAz;
+void EncoderRa() {
+  int encodedRa = (digitalRead(enc_ra_A) << 1) | digitalRead(enc_ra_B);
+  int sum = (lastEncodedRa << 2) | encodedRa;
   portENTER_CRITICAL_ISR(&encoderMux);
-  if (sum == 0b1101 || sum == 0b0100 || sum == 0b0010 || sum == 0b1011) encoderValueAz++;
-  if (sum == 0b1110 || sum == 0b0111 || sum == 0b0001 || sum == 0b1000) encoderValueAz--;
+  if (sum == 0b1101 || sum == 0b0100 || sum == 0b0010 || sum == 0b1011) encoderValueRa++;
+  if (sum == 0b1110 || sum == 0b0111 || sum == 0b0001 || sum == 0b1000) encoderValueRa--;
   portEXIT_CRITICAL_ISR(&encoderMux);
-  lastEncodedAz = encodedAz;
+  lastEncodedRa = encodedRa;
 }
 
 void printEncoderValue(long val)
-{  
-  unsigned long aval; 
+{
+  unsigned long aval;
 
-  if (val < 0)
-    client.print("-");
-  else
-    client.print("+");
-
+  client.print(val < 0 ? "-" : "+");
   aval = abs(val);
 
-  if (aval < 10)
-    client.print("0000");
-  else if (aval < 100)
-    client.print("000");
-  else if (aval < 1000)
-    client.print("00");
-  else if (aval < 10000) 
-    client.print("0");
+  if      (aval < 10)    client.print("0000");
+  else if (aval < 100)   client.print("000");
+  else if (aval < 1000)  client.print("00");
+  else if (aval < 10000) client.print("0");
 
-  client.print(aval);  
+  client.print(aval);
 }
 
 void printResolution()
-{  
-
-   //char response[20];
-   //snprintf(response, 20, "%u-%u", STEPS_AZ, STEPS_ALT);
-   //remoteClient.println(response);
-
-    client.print(resolution_az);
-    client.print("-");
-    client.print(resolution_alt);
+{
+  client.print(resolution_ra);
+  client.print("-");
+  client.print(resolution_dec);
 }
 
 void printFirmware()
 {
-  client.print("Magig DSC ");
+  client.print("Big Blue DSC ");
   client.print(firmwareVersion);
-  client.print(", az rezolution = ");
-  client.print(resolution_az);
-  client.print(", alt rezolution = ");
-  client.print(resolution_alt);         
-  client.print("\r"); 
+  client.print(", RA resolution = ");
+  client.print(resolution_ra);
+  client.print(", Dec resolution = ");
+  client.print(resolution_dec);
+  client.print("\r");
 }

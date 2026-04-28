@@ -18,7 +18,7 @@ The telescope creates its own WiFi access point. Connect your laptop or tablet d
 
 | Setting | Value |
 |---|---|
-| SSID | `BigBlueWiFiDSC` |
+| SSID | `BigBlueWiFiDSC_V2` |
 | Password | `bigbluebigblue` |
 | IP address | `192.168.4.1` (fixed) |
 | Port | `80` |
@@ -30,16 +30,75 @@ The telescope advertises itself as a Bluetooth serial device.
 
 | Setting | Value |
 |---|---|
-| Device name | `BigBlueBluetoothDSC` |
+| Device name | `BigBlueBluetoothDSC_V2` |
 
 ## Encoder Resolution
 
 | Axis | Steps/rev |
 |---|---|
-| Azimuth / RA | -24679 |
-| Altitude / Dec | 20000 |
+| RA | 20000 |
+| Dec | -24679 |
 
-The negative azimuth value reverses the counting direction.
+The negative Dec value reverses the counting direction.
+
+## Connecting with SkySafari
+
+SkySafari Plus or Pro is required (the free version does not support telescope control).
+
+### WiFi
+
+**1. Join the network**
+On your device, go to WiFi settings and connect to `BigBlueWiFiDSC_V2` (password: `bigbluebigblue`). Your device may show "no internet" — this is expected; stay connected.
+
+**2. Add a scope preset in SkySafari**
+- Open SkySafari → **Settings** → **Telescope** → **Add Preset**
+- Choose **Other** as the connection type
+- Set **Scope Type** to `Basic Encoder System`
+- Set **Mount Type** to `Equatorial Push-To`
+- Set **Connection** to `WiFi`
+- Enter **IP Address:** `192.168.4.1` and **Port:** `80`
+- Tap **Check IP and Port** to confirm the connection
+- Enter encoder resolution manually:
+  - **RA:** `20000`
+  - **Dec:** `-24679`
+- Enter the preset name: `Big Blue WiFi DSC V2`
+- Save the preset
+
+**3. Connect**
+Tap **Scope** on the main screen, then **Connect**. The telescope position indicator will appear on the sky chart.
+
+---
+
+### Bluetooth
+
+**1. Pair the device**
+On your device, go to Bluetooth settings and pair with `BigBlueBluetoothDSC_V2`.
+
+**2. Add a scope preset in SkySafari**
+- Open SkySafari → **Settings** → **Telescope** → **Add Preset**
+- Choose **Other** as the connection type
+- Set **Scope Type** to `Basic Encoder System`
+- Set **Mount Type** to `Equatorial Push-To`
+- Set **Connection** to `Bluetooth`
+- Select `BigBlueBluetoothDSC_V2` from the device list
+- Enter encoder resolution manually:
+  - **RA:** `20000`
+  - **Dec:** `-24679`
+- Enter the preset name: `Big Blue Bluetooth DSC V2`
+- Save the preset
+
+> **Note:** Bluetooth scope connection is only available on Android. iOS users must use the WiFi variant.
+
+**3. Connect**
+Tap **Scope** on the main screen, then **Connect**.
+
+---
+
+### Alignment
+
+After connecting, point the telescope at one known star and center it in a medium- or high-power eyepiece. Tap the star in SkySafari and select **Align**. Because Big Blue is polar aligned, a single alignment star is sufficient for accurate pointing across the sky.
+
+---
 
 ## Protocol
 

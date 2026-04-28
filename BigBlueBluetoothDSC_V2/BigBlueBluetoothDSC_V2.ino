@@ -33,10 +33,10 @@
 
 BluetoothSerial SerialBT;
 
-String firmwareVersion = "1.4";
+String firmwareVersion = "2.0";
 
-const long resolution_ra  = -24679;
-const long resolution_dec =  20000;
+const long resolution_ra  =  20000;
+const long resolution_dec = -24679;
 const int  STATUS_LED     =  2;
 
 #define enc_RA_A  27
