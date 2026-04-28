@@ -35,7 +35,7 @@ BluetoothSerial SerialBT;
 
 String firmwareVersion = "1.4";
 
-const long resolution_ra  =  24679;
+const long resolution_ra  = -24679;
 const long resolution_dec =  20000;
 const int  STATUS_LED     =  2;
 

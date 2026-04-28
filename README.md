@@ -34,12 +34,12 @@ The telescope advertises itself as a Bluetooth serial device.
 
 ## Encoder Resolution
 
-| Axis | WiFi sketch | Bluetooth sketch |
-|---|---|---|
-| Azimuth / RA | -24679 steps/rev | 24679 steps/rev |
-| Altitude / Dec | 20000 steps/rev | 20000 steps/rev |
+| Axis | Steps/rev |
+|---|---|
+| Azimuth / RA | -24679 |
+| Altitude / Dec | 20000 |
 
-The azimuth resolution is negative in the WiFi sketch to reverse the counting direction.
+The negative azimuth value reverses the counting direction.
 
 ## Protocol
 
