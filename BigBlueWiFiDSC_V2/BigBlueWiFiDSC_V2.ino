@@ -67,7 +67,8 @@ void setup()
   IPAddress gateway(192, 168, 4, 1);
   IPAddress subnet(255, 255, 255, 0);
   WiFi.softAPConfig(local_IP, gateway, subnet);
-  WiFi.softAP(ssid, password, 6);   // channel 6 for RF stability
+  WiFi.softAP(ssid, password, 1);   // channel 1 to minimize bluetooth interference
+  WiFi.setSleep(false);              // disable power saving to prevent dropped connections
   server.begin();
 }
 
@@ -75,6 +76,7 @@ void loop() {
   client = server.available();
 
   if (client) {
+    client.setNoDelay(true);           // send responses immediately, no buffering
     digitalWrite(STATUS_LED, HIGH);
     unsigned long lastActivity = millis();
 
@@ -109,7 +111,7 @@ void loop() {
       }
 
       // drop stale connections
-      if (millis() - lastActivity > 5000) break;
+      if (millis() - lastActivity > 30000) break;
     }
 
     client.stop();
