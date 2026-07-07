@@ -24,6 +24,19 @@ The telescope creates its own WiFi access point. Connect your laptop or tablet d
 | Port | `80` |
 | WiFi channel | 6 |
 
+### BigBlueWiFiDSC_RouterMode
+
+The telescope connects to an existing WiFi router (STA mode) with a static IP. All devices on the same router network can reach the DSC without switching WiFi networks.
+
+| Setting | Value |
+|---|---|
+| Router SSID | `BigBlueDSC_Router` |
+| Router Password | `bigbluebigblue` |
+| IP address | `192.168.1.100` (static) |
+| Port | `80` |
+
+> The router network credentials and static IP are defined at the top of `BigBlueWiFiDSC_RouterMode.ino` and must match your router configuration.
+
 ### BigBlueBluetoothDSC_V2
 
 The telescope advertises itself as a Bluetooth serial device.
@@ -45,7 +58,7 @@ The negative Dec value reverses the counting direction.
 
 SkySafari Plus or Pro is required (the free version does not support telescope control).
 
-### WiFi
+### WiFi — Access Point Mode (BigBlueWiFiDSC_V2)
 
 **1. Join the network**
 On your device, go to WiFi settings and connect to `BigBlueWiFiDSC_V2` (password: `bigbluebigblue`). Your device may show "no internet" — this is expected; stay connected.
@@ -62,6 +75,30 @@ On your device, go to WiFi settings and connect to `BigBlueWiFiDSC_V2` (password
   - **RA:** `20000`
   - **Dec:** `-24679`
 - Enter the preset name: `Big Blue WiFi DSC V2`
+- Save the preset
+
+**3. Connect**
+Tap **Scope** on the main screen, then **Connect**. The telescope position indicator will appear on the sky chart.
+
+---
+
+### WiFi — Router Mode (BigBlueWiFiDSC_RouterMode)
+
+**1. Ensure both devices are on the same network**
+Connect your phone or tablet to the same router network the ESP32 is configured to join (`BigBlueDSC_Router`).
+
+**2. Add a scope preset in SkySafari**
+- Open SkySafari → **Settings** → **Telescope** → **Add Preset**
+- Choose **Other** as the connection type
+- Set **Scope Type** to `Basic Encoder System`
+- Set **Mount Type** to `Equatorial Push-To`
+- Set **Connection** to `WiFi`
+- Enter **IP Address:** `192.168.1.100` and **Port:** `80`
+- Tap **Check IP and Port** to confirm the connection
+- Enter encoder resolution manually:
+  - **RA:** `20000`
+  - **Dec:** `-24679`
+- Enter the preset name: `Big Blue WiFi DSC Router Mode`
 - Save the preset
 
 **3. Connect**
@@ -114,13 +151,20 @@ Both variants implement the standard Basic Encoder protocol:
 
 | LED state | Meaning |
 |---|---|
-| Off | Waiting for connection |
+| Off | Waiting for client connection |
 | On | Client connected |
+
+Router Mode adds additional startup states:
+
+| LED state | Meaning |
+|---|---|
+| Slow blink | Connecting to router |
+| Fast continuous blink | Router connection failed (check credentials or network) |
 
 ## Building & Flashing
 
 1. Install [Arduino IDE](https://www.arduino.cc/en/software) and the ESP32 board package.
-2. Open the `.ino` file for the variant you want (`BigBlueWiFiDSC_V2` or `BigBlueBluetoothDSC_V2`).
+2. Open the `.ino` file for the variant you want (`BigBlueWiFiDSC_V2`, `BigBlueWiFiDSC_RouterMode`, or `BigBlueBluetoothDSC_V2`).
 3. Select your ESP32 board under **Tools → Board**.
 4. Select the correct COM port under **Tools → Port**.
 5. Click **Upload**.
@@ -131,4 +175,5 @@ If the upload fails with "No serial data received," hold the **BOOT** button on 
 
 - The WiFi variant handles OS captive-portal connectivity probes (Windows, Android, iOS) so the "no internet" warning clears automatically after joining the network.
 - Both variants use interrupt-safe spinlocks when reading encoder values to prevent corrupted counts.
-- The WiFi variant drops stale client connections after 5 seconds of inactivity.
+- The WiFi variant drops stale client connections after 30 seconds of inactivity.
+- The Router Mode variant (`BigBlueWiFiDSC_RouterMode`) monitors WiFi connection health and automatically reconnects if the router link is lost.
